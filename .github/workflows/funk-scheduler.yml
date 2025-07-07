@@ -1,0 +1,47 @@
+name: Discord Funk Scheduler
+
+on:
+  schedule:
+    # Jeden Montag um 7:00 Uhr (UTC+1 = 6:00 UTC)
+    - cron: '0 6 * * 1'
+  workflow_dispatch: # Ermöglicht manuellen Start
+
+jobs:
+  send-funk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Funk
+        run: |
+          # Generiere Funk-Nummer (beginnt mit 8, 5 Stellen)
+          FUNK_NUMBER="8$(shuf -i 1000-9999 -n 1)"
+          
+          # Deutsche Zeit formatieren
+          GERMAN_TIME=$(TZ='Europe/Berlin' date '+%A %H:%M')
+          
+          # Discord Webhook Payload erstellen
+          PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [
+              {
+                "color": 4886754,
+                "description": "📻 **$GERMAN_TIME Uhr - Neuer Funkkanal**\\n\\n🎵 **Funk-Kanal**\\n\\n📡 **$FUNK_NUMBER MHz**",
+                "thumbnail": {
+                  "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/radio-Vn1ftVgfqmL3WBHlNgfqEIYMuMxWW1.png"
+                },
+                "footer": {
+                  "text": "Funk Manager • Deutsche Zeit"
+                },
+                "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%S.000Z)"
+              }
+            ]
+          }
+          EOF
+          )
+          
+          # An Discord senden
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
+            "${{ secrets.DISCORD_WEBHOOK_URL }}"
+          
+          echo "✅ Funk $FUNK_NUMBER MHz erfolgreich gesendet!"
