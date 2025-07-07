@@ -42,6 +42,7 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD" \
-            "${{ secrets.DISCORD_WEBHOOK_URL }}"
+            env:
+            DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           
           echo "✅ Funk $FUNK_NUMBER MHz erfolgreich gesendet!"
