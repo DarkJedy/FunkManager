@@ -10,21 +10,31 @@ jobs:
   send-funk:
     runs-on: ubuntu-latest
     steps:
+      - name: Set German Time
+        run: |
+          GERMAN_TIME=$(TZ='Europe/Berlin' date '+%A %H:%M')
+          echo "GERMAN_TIME=$GERMAN_TIME" >> $GITHUB_ENV
+          
+      - name: Set Funk Number
+        run: |
+          FUNK_NUMBER="8$(shuf -i 1000-9999 -n 1)"
+          echo "FUNK_NUMBER=$FUNK_NUMBER" >> $GITHUB_ENV
+          
       - name: Send Discord Funk
         run: |
-          # Generiere Funk-Nummer (beginnt mit 8, 5 Stellen)
-          FUNK_NUMBER="8$(shuf -i 1000-9999 -n 1)"
-          
           # Deutsche Zeit formatieren
-          GERMAN_TIME=$(TZ='Europe/Berlin' date '+%A %H:%M')
+          GERMAN_TIME=${{ env.GERMAN_TIME }}
+          
+          # Funk-Nummer generieren
+          FUNK_NUMBER=${{ env.FUNK_NUMBER }}
           
           # Discord Webhook Payload erstellen
-          PAYLOAD=$(cat <<'EOF'
+          PAYLOAD=$(cat <<EOF
           {
             "embeds": [
               {
                 "color": 4886754,
-                "description": "📻 **${GERMAN_TIME} Uhr - Neuer Funkkanal**\n\n🎵 **Funk-Kanal**\n\n📡 **${FUNK_NUMBER} MHz**",
+                "description": "📻 **$GERMAN_TIME Uhr - Neuer Funkkanal**\n\n🎵 **Funk-Kanal**\n\n📡 **$FUNK_NUMBER MHz**",
                 "thumbnail": {
                   "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/radio-Vn1ftVgfqmL3WBHlNgfqEIYMuMxWW1.png"
                 },
@@ -38,11 +48,26 @@ jobs:
           EOF
           )
           
-          # An Discord senden (WICHTIG: Verwendet das GitHub Secret!)
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -d "$PAYLOAD" \
-            env:
-            DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          # Debug: Webhook URL prüfen
+          echo "🔍 Webhook URL Check:"
+          echo "URL Length: ${#DISCORD_WEBHOOK_URL}"
+          echo "URL Start: ${DISCORD_WEBHOOK_URL:0:30}..."
           
-          echo "✅ Funk $FUNK_NUMBER MHz erfolgreich gesendet!"
+          # An Discord senden mit verbesserter Fehlerbehandlung
+          HTTP_CODE=$(curl -w "%{http_code}" -o response.txt -s -X POST             -H "Content-Type: application/json"             -H "User-Agent: GitHub-Actions-Funk-Bot/1.0"             -d "$PAYLOAD"             "${{ secrets.DISCORD_WEBHOOK_URL }}")
+          
+          # Antwort prüfen
+          echo "📡 HTTP Status Code: $HTTP_CODE"
+          echo "📄 Discord Response:"
+          cat response.txt
+          
+          # Erfolg prüfen
+          if [ "$HTTP_CODE" -eq 204 ]; then
+            echo "✅ Funk $FUNK_NUMBER MHz erfolgreich gesendet!"
+          else
+            echo "❌ Fehler beim Senden! HTTP Code: $HTTP_CODE"
+            echo "Response: $(cat response.txt)"
+            exit 1
+          fi
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
