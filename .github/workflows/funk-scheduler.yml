@@ -19,12 +19,12 @@ jobs:
           GERMAN_TIME=$(TZ='Europe/Berlin' date '+%A %H:%M')
           
           # Discord Webhook Payload erstellen
-          PAYLOAD=$(cat <<EOF
+          PAYLOAD=$(cat <<'EOF'
           {
             "embeds": [
               {
                 "color": 4886754,
-                "description": "📻 **$GERMAN_TIME Uhr - Neuer Funkkanal**\\n\\n🎵 **Funk-Kanal**\\n\\n📡 **$FUNK_NUMBER MHz**",
+                "description": "📻 **${GERMAN_TIME} Uhr - Neuer Funkkanal**\n\n🎵 **Funk-Kanal**\n\n📡 **${FUNK_NUMBER} MHz**",
                 "thumbnail": {
                   "url": "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/radio-Vn1ftVgfqmL3WBHlNgfqEIYMuMxWW1.png"
                 },
@@ -38,10 +38,10 @@ jobs:
           EOF
           )
           
-          # An Discord senden
+          # An Discord senden (WICHTIG: Verwendet das GitHub Secret!)
           curl -X POST \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD" \
-            "${{ https://discord.com/api/webhooks/1391640778849390644/rDSUENtK9d3WrwrF56VniBzlr4eF-UvQngmspYrKPU6t_HTKSLlTGkmrlwp1YHlIXGZV }}"
+            "${{ secrets.DISCORD_WEBHOOK_URL }}"
           
           echo "✅ Funk $FUNK_NUMBER MHz erfolgreich gesendet!"
