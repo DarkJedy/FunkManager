@@ -42,6 +42,6 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD" \
-            "${{ secrets.DISCORD_WEBHOOK_URL }}"
+            "${{ https://discord.com/api/webhooks/1391640778849390644/rDSUENtK9d3WrwrF56VniBzlr4eF-UvQngmspYrKPU6t_HTKSLlTGkmrlwp1YHlIXGZV }}"
           
           echo "✅ Funk $FUNK_NUMBER MHz erfolgreich gesendet!"
